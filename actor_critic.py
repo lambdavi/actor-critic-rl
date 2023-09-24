@@ -1,6 +1,16 @@
 import torch
 from networks import ActorCriticNetwork
+import numpy as np
+class ActorCriticLoss(torch.nn.Module):
+    def __init__(self):
+        super(ActorCriticLoss, self).__init__()
 
+    def forward(self, log_prob, delta):
+        actor_loss = -log_prob*delta
+        critic_loss = delta ** 2
+        loss = actor_loss+critic_loss
+        return loss.mean()
+    
 class Agent:
     def __init__(self, alpha=0.0003, gamma=0.99, n_actions=2) -> None:
         self.gamma = gamma
@@ -11,20 +21,20 @@ class Agent:
         self.model = ActorCriticNetwork(n_actions=n_actions)
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=alpha)
-
+        self.loss_fn = ActorCriticLoss()
         self.model.train()
     
     def choose_action(self, observation):
-        state = torch.tensor([observation])
-        _, probs = self.model(state)
+        state = torch.tensor(np.array([observation]))
+        with torch.no_grad():
+            _, probs = self.model(state)
         action_probabilities = torch.distributions.Categorical(probs=probs)
         action = action_probabilities.sample()
         self.action = action
-        print(self.action)
         return action.numpy()[0]
 
     def save_models(self) -> None:
-        print('... saving models ...')
+        #print('... saving models ...')
         torch.save(self.model.state_dict(), self.model.checkpoint_file)
 
     def load_models(self) -> None:
@@ -39,12 +49,11 @@ class Agent:
             State_: next state
             Done: is it done learning?
         """
-        state = torch.tensor([state], dtype=torch.float32)
-        state_ = torch.tensor([state_], dtype=torch.float32)
+        state = torch.tensor(np.array([state]), dtype=torch.float32)
+        state_ = torch.tensor(np.array([state_]), dtype=torch.float32)
         reward = torch.tensor(reward, dtype=torch.float32)
         
         self.optimizer.zero_grad()
-
         state_value, probs = self.model(state)
         state_value_, _ = self.model(state_)
         state_value = torch.squeeze(state_value)
@@ -52,13 +61,14 @@ class Agent:
 
         action_probs = torch.distributions.Categorical(probs = probs)
         log_prob = action_probs.log_prob(self.action)
-
+        
         # Temporal difference delta (0 future value if done)
-        delta = reward + self.gamma*state_value_(1-int(done)) - state_value
-        actor_loss = -log_prob*delta
-        critic_loss = delta ** 2
+        delta = reward + self.gamma*state_value_*(1-int(done)) - state_value
+        #actor_loss = -log_prob*delta
+        #critic_loss = delta ** 2
+        #total_loss = torch.tensor(actor_loss+critic_loss, requires_grad=True)
+        total_loss = self.loss_fn(log_prob, delta)
 
-        total_loss = torch.tensor(actor_loss + critic_loss)
         total_loss.backward()
 
         self.optimizer.step()

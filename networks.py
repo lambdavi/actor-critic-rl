@@ -1,6 +1,5 @@
 import os
 from torch import nn
-
 class ActorCriticNetwork(nn.Module):
     def __init__(self, n_actions, fc1_dims=1024, fc2_dims=512, name='actor_critic', chpt_dir='tmp/actor_critic') -> None:
         super(ActorCriticNetwork, self).__init__()
@@ -11,16 +10,15 @@ class ActorCriticNetwork(nn.Module):
         self.model_name = name
         self.checkpoint_dir = chpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name+'_ac')
-        self.fc1 = nn.Linear(1, self.fc1_dims)
+        self.fc1 = nn.Linear(4, self.fc1_dims)
         self.relu = nn.ReLU()
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         self.val_out = nn.Linear(self.fc2_dims, 1)
         self.pol_out = nn.Linear(self.fc2_dims, self.n_actions)
 
     def forward(self, x):
-        print(x.shape)
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
         v = self.val_out(x)
-        p = nn.Softmax(self.pol_out(x))
+        p = nn.functional.softmax(self.pol_out(x))
         return v, p
