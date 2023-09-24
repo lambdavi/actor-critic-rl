@@ -20,5 +20,5 @@ class ActorCriticNetwork(nn.Module):
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
         v = self.val_out(x)
-        p = nn.functional.softmax(self.pol_out(x))
+        p = nn.functional.softmax(self.pol_out(x), dim=1)
         return v, p
