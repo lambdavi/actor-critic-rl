@@ -3,5 +3,5 @@ Welcome to this exploratory project about Actor-Critic method! This repository c
 
 The Actor Critic Methods, consist in:
 
-The “Critic” estimates the value function. This could be the action-value (the Q value) or state-value (the V value).
-The “Actor” updates the policy distribution in the direction suggested by the Critic (such as with policy gradients).
+- The “Critic” estimates the value function. This could be the action-value (the Q value) or state-value (the V value).<br>
+- The “Actor” updates the policy distribution in the direction suggested by the Critic (such as with policy gradients).
