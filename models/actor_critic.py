@@ -1,6 +1,7 @@
 import torch
 from networks import ActorCriticNetwork
 import numpy as np
+import random
 class ActorCriticLoss(torch.nn.Module):
     def __init__(self):
         super(ActorCriticLoss, self).__init__()
@@ -12,34 +13,44 @@ class ActorCriticLoss(torch.nn.Module):
         return loss.mean()
     
 class Agent:
-    def __init__(self, alpha=0.0003, gamma=0.99, n_actions=2) -> None:
+    def __init__(self, obs_space=6, alpha=0.0003, gamma=0.99, epsilon=0.1, n_actions=2, eval_mode=False) -> None:
         self.gamma = gamma
         self.n_actions = n_actions
         self.action = None
         self.action_space = [i for i in range(self.n_actions)]
-
-        self.model = ActorCriticNetwork(n_actions=n_actions)
+        self.epsilon = epsilon
+        self.model = ActorCriticNetwork(n_actions=n_actions, obs_space = obs_space)
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=alpha)
         self.loss_fn = ActorCriticLoss()
-        self.model.train()
+        if not eval_mode:
+            self.model.train()
+        else:
+            self.model.eval()
     
     def choose_action(self, observation):
-        state = torch.tensor(np.array([observation]))
-        with torch.no_grad():
-            _, probs = self.model(state)
-        action_probabilities = torch.distributions.Categorical(probs=probs)
-        action = action_probabilities.sample()
-        self.action = action
-        return action.numpy()[0]
+        if random.random() < self.epsilon:
+            # Explore: choose a random action
+            action = random.choice(self.action_space)
+            action = torch.tensor([action])
+        else:
+            # Exploit: choose the action with the highest estimated value
+            state = torch.tensor(np.array([observation]))
+            with torch.no_grad():
+                _, probs = self.model(state)
+            action_probabilities = torch.distributions.Categorical(probs=probs)
+            action = action_probabilities.sample()
+            self.action = action
+        action = action.numpy()[0]
+        return action
 
-    def save_models(self) -> None:
+    def save_models(self, name="") -> None:
         #print('... saving models ...')
-        torch.save(self.model.state_dict(), self.model.checkpoint_file)
+        torch.save(self.model.state_dict(), self.model.checkpoint_file+name)
 
-    def load_models(self) -> None:
+    def load_models(self, name="") -> None:
         print('... loading model ...')
-        state_dict = torch.load(self.model.checkpoint_file)
+        state_dict = torch.load(self.model.checkpoint_file+name)
         self.model.load_state_dict(state_dict)
     
     def learn(self, state, reward, state_, done):
