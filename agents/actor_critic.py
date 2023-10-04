@@ -1,5 +1,5 @@
 import torch
-from networks import ActorCriticNetwork
+from models.ac_network import ActorCriticNetwork
 import numpy as np
 import random
 class ActorCriticLoss(torch.nn.Module):
@@ -21,7 +21,7 @@ class Agent:
         self.epsilon = epsilon
         self.model = ActorCriticNetwork(n_actions=n_actions, obs_space = obs_space)
 
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=alpha)
+        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=alpha)
         self.loss_fn = ActorCriticLoss()
         if not eval_mode:
             self.model.train()

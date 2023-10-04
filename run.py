@@ -1,6 +1,6 @@
 import gym
 import numpy as np
-from models.actor_critic import Agent
+from agents.actor_critic import Agent
 from utils import plot_learning_curve
 
 def run_ac():
@@ -8,7 +8,7 @@ def run_ac():
     if eval_mode:
         env = gym.make('CartPole-v1', render_mode="human")
     else:
-        env = gym.make('CartPole-v1')
+        env = gym.make('Acrobot-v1', render_mode="human")
     load_checkpoint = False
     agent = Agent(alpha=5e-4, obs_space=env.observation_space.shape[0], n_actions=env.action_space.n, eval_mode=eval_mode)
     n_games = 1000
@@ -21,7 +21,7 @@ def run_ac():
     score_history = []
     
     if load_checkpoint:
-        agent.load_models("_greedy")
+        agent.load_models("_best")
     
     for i in range(n_games):
         observation = env.reset()[0]

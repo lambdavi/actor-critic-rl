@@ -1,5 +1,6 @@
 import os
 from torch import nn
+
 class ActorCriticNetwork(nn.Module):
     def __init__(self, n_actions, obs_space, fc1_dims=1024, fc2_dims=512, name='actor_critic', chpt_dir='tmp/actor_critic') -> None:
         super(ActorCriticNetwork, self).__init__()
