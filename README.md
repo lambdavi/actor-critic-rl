@@ -6,6 +6,6 @@ The Actor Critic Methods, consist in:
 - The “Critic” estimates the value function. This could be the action-value (the Q value) or state-value (the V value).<br>
 - The “Actor” updates the policy distribution in the direction suggested by the Critic (such as with policy gradients).
 
-There are different types of algorithms in this topic In this repo I implemented by far:
+I implemented by far:
 - Vanilla Actor Critic method (1 single network)
-- Deep Deterministic Policy Gradients (2 distinc networks)
+- Deep Deterministic Policy Gradients (2 distinct networks)
